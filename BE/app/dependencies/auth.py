@@ -40,30 +40,3 @@ def get_current_user(
         raise credentials_exception
 
     return user
-
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-    )
-
-    try:
-
-        payload = decode_access_token(token)
-
-        user_id = payload.get("sub")
-
-        if user_id is None:
-            raise credentials_exception
-
-    except JWTError:
-        raise credentials_exception
-
-    user = UserRepository.get_by_id(
-        db,
-        int(user_id),
-    )
-
-    if user is None:
-        raise credentials_exception
-
-    return user
