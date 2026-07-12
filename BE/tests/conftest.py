@@ -51,7 +51,7 @@ def client(db_session):
         finally:
             pass
 
-    app.dependency_overrides[get_db] = db_session
+    app.dependency_overrides[get_db] = override_get_db
     from fastapi.testclient import TestClient
 
     with TestClient(app) as c:
