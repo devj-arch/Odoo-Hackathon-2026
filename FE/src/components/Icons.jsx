@@ -154,12 +154,13 @@ export function IconEdit(props) {
   );
 }
 
-export function IconTrash(props) {
+export function IconTrash2(props) {
   return (
     <svg viewBox="0 0 24 24" width="15" height="15" {...base} {...props}>
       <path d="M4 7h16" />
       <path d="M9 7V4.8A.8.8 0 0 1 9.8 4h4.4a.8.8 0 0 1 .8.8V7" />
       <path d="M6.5 7 7.3 19.2a1.6 1.6 0 0 0 1.6 1.5h6.2a1.6 1.6 0 0 0 1.6-1.5L17.5 7" />
+      <path d="M10 11v6M14 11v6" />
     </svg>
   );
 }
@@ -183,7 +184,7 @@ export function IconDownload(props) {
   );
 }
 
-export function IconLogout(props) {
+export function IconLogOut(props) {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
       <path d="M9 4H5.8A1.8 1.8 0 0 0 4 5.8v12.4A1.8 1.8 0 0 0 5.8 20H9" />
@@ -227,6 +228,86 @@ export function IconUser(props) {
     <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
       <circle cx="12" cy="8.2" r="3.4" />
       <path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" />
+    </svg>
+  );
+}
+
+export function IconAlertCircle(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5v5.2" />
+      <circle cx="12" cy="16.2" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconCheckCircle(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12.3 2.6 2.6L16.3 9" />
+    </svg>
+  );
+}
+
+export function IconCheck(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="m4.5 12.5 5 5 10-10" />
+    </svg>
+  );
+}
+
+export function IconX(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5" />
+    </svg>
+  );
+}
+
+export function IconChevronLeft(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="m15 6-6 6 6 6" />
+    </svg>
+  );
+}
+
+export function IconChevronRight(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+export function IconPlay(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="M7 4.8v14.4a.8.8 0 0 0 1.2.7l11.5-7.2a.8.8 0 0 0 0-1.4L8.2 4.1A.8.8 0 0 0 7 4.8Z" />
+    </svg>
+  );
+}
+
+export function IconTrendingUp(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="m3 16 6.5-6.5 4 4L21 6" />
+      <path d="M15 6h6v6" />
+    </svg>
+  );
+}
+
+export function IconBarChart3(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" {...base} {...props}>
+      <path d="M4 20V11" />
+      <path d="M10 20V6" />
+      <path d="M16 20v-7.5" />
+      <path d="M20 20v-4.5" />
+      <path d="M3 20h18" />
     </svg>
   );
 }
