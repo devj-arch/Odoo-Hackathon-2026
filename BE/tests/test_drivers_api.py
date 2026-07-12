@@ -13,16 +13,16 @@ def _seed_roles(db):
     db.commit()
 
 
-def _get_token(client: TestClient, db) -> str:
+def _get_token(client: TestClient, db, role: str = "Fleet Manager", email: str = "driver_test@test.com") -> str:
     """Sign up a user and return a valid JWT token."""
     _seed_roles(db)
     client.post("/auth/signup", json={
-        "email": "driver_test@test.com", "password": "secret123",
+        "email": email, "password": "secret123",
         "full_name": "Test User", "role_id": 1,
     })
     resp = client.post("/auth/login", json={
-        "email": "driver_test@test.com", "password": "secret123",
-        "role": "Fleet Manager",
+        "email": email, "password": "secret123",
+        "role": role,
     })
     return resp.json()["access_token"]
 
@@ -85,6 +85,20 @@ class TestDriversAPI:
         resp = client.get("/drivers/", headers=_auth(token))
         assert resp.status_code == 200
         assert len(resp.json()) == 2
+
+    def test_dispatcher_can_list_drivers(self, client: TestClient, db_session):
+        manager_token = _get_token(client, db_session, role="Fleet Manager", email="fleet@test.com")
+        dispatcher_token = _get_token(client, db_session, role="Dispatcher", email="dispatch@test.com")
+
+        client.post("/drivers/", json={
+            "name": "Driver C", "license_number": "DL-C",
+            "license_category": "C", "license_expiry": VALID_EXPIRY,
+            "contact": "+1-555-C",
+        }, headers=_auth(manager_token))
+
+        resp = client.get("/drivers/", headers=_auth(dispatcher_token))
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
 
     def test_get_driver_by_id(self, client: TestClient, db_session):
         token = _get_token(client, db_session)

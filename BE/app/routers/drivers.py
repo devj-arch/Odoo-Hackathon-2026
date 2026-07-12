@@ -9,16 +9,18 @@ from app.models.user import User
 from app.schemas.driver import DriverCreate, DriverOut, DriverUpdate
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/drivers", tags=["drivers"], dependencies=[
-    Depends(require_roles(Role.SAFETY_OFFICER.value))
-])
+router = APIRouter(prefix="/drivers", tags=["drivers"])
 
 
 @router.get("/", response_model=list[DriverOut])
 def list_drivers(
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
+        require_roles(
+            Role.FLEET_MANAGER.value,
+            Role.DISPATCHER.value,
+            Role.SAFETY_OFFICER.value,
+        )
     ),
 ):
     """List all drivers."""
@@ -30,7 +32,11 @@ def get_driver(
     driver_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
+        require_roles(
+            Role.FLEET_MANAGER.value,
+            Role.DISPATCHER.value,
+            Role.SAFETY_OFFICER.value,
+        )
     ),
 ):
     """Get a single driver by ID."""
