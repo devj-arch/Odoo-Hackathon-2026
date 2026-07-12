@@ -12,6 +12,8 @@ from app.core.security import (
 from app.repository.user_repository import UserRepository
 from app.utils.email import send_password_reset_email
 
+from app.core.security import verify_password, create_access_token
+from datetime import datetime, timedelta
 
 class AuthService:
 
