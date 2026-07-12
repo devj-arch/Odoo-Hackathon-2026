@@ -9,17 +9,41 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.models.user import User
 from app.repository.user_repository import UserRepository
+from app.schemas.user import UserCreate
 from app.utils.email import send_password_reset_email
 
-from app.core.security import verify_password, create_access_token
-from datetime import datetime, timedelta
 
 class AuthService:
 
-    @staticmethod
-    def login(db: Session, email: str, password: str, role: str):
+    # ── Signup ───────────────────────────────────────────────────────────
 
+    @staticmethod
+    def signup(db: Session, data: UserCreate) -> User:
+        """Register a new user. Raises ValueError on duplicate email."""
+        existing = UserRepository.get_by_email(db, data.email)
+        if existing:
+            raise ValueError("A user with this email already exists.")
+
+        user = User(
+            email=data.email,
+            password_hash=hash_password(data.password),
+            name=data.full_name,
+            role_id=data.role_id,
+        )
+        return UserRepository.create(db, user)
+
+    # ── Login ────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def login(db: Session, email: str, password: str, role: str) -> dict | None:
+        """Authenticate with email, password, and role.
+
+        Enforces account lockout after 5 consecutive failed attempts.
+        Returns a dict with access_token, token_type, and user info,
+        or None if credentials are invalid.
+        """
         user = UserRepository.get_by_email(db, email)
 
         if user is None:
@@ -27,11 +51,10 @@ class AuthService:
 
         # Check if account is locked
         if user.is_locked:
-
             if user.locked_until and datetime.utcnow() < user.locked_until:
-                raise Exception("Account locked after 5 failed attempts. Try again later.")
+                return None  # still locked — reject
 
-            # Lock expired
+            # Lock expired — reset
             user.is_locked = False
             user.failed_login_attempts = 0
             user.locked_until = None
@@ -39,34 +62,27 @@ class AuthService:
 
         # Wrong password
         if not verify_password(password, user.password_hash):
-
             user.failed_login_attempts += 1
-
             if user.failed_login_attempts >= 5:
                 user.is_locked = True
                 user.locked_until = datetime.utcnow() + timedelta(minutes=15)
-
             db.commit()
-
             return None
 
         # Wrong role
         if user.role.name != role:
             return None
 
-        # Successful login
+        # Successful login — reset lockout counters
         user.failed_login_attempts = 0
         user.is_locked = False
         user.locked_until = None
-
         db.commit()
 
-        token = create_access_token(
-            {
-                "sub": str(user.id),
-                "role": user.role.name,
-            }
-        )
+        token = create_access_token({
+            "sub": str(user.id),
+            "role": user.role.name,
+        })
 
         return {
             "access_token": token,
@@ -79,17 +95,16 @@ class AuthService:
             },
         }
 
+    # ── Password reset ────────────────────────────────────────────────────
+
     @staticmethod
     def forgot_password(db: Session, email: str) -> None:
-        """
-        If a user with this email exists, generate a reset token and email
-        them a reset link. Silently does nothing otherwise, so the router
-        can always return the same generic response and avoid revealing
-        which emails are registered.
-        """
+        """Send a password-reset email if the account exists.
 
+        Always returns None — the router returns a generic response so
+        attackers cannot enumerate registered emails.
+        """
         user = UserRepository.get_by_email(db, email)
-
         if user is None:
             return
 
@@ -97,22 +112,18 @@ class AuthService:
         user.reset_token_expiry = datetime.utcnow() + timedelta(
             minutes=settings.RESET_TOKEN_EXPIRE_MINUTES
         )
-
         db.commit()
 
         reset_link = f"{settings.FRONTEND_URL}/reset-password?token={user.reset_token}"
-
         send_password_reset_email(user.email, reset_link)
 
     @staticmethod
     def reset_password(db: Session, token: str, new_password: str) -> bool:
-        """
-        Validate the reset token and set a new password.
+        """Validate the reset token and set a new password.
+
         Returns False if the token is missing, unknown, or expired.
         """
-
         user = UserRepository.get_by_reset_token(db, token)
-
         if user is None:
             return False
 
@@ -125,7 +136,6 @@ class AuthService:
         user.failed_login_attempts = 0
         user.is_locked = False
         user.locked_until = None
-
         db.commit()
 
         return True
