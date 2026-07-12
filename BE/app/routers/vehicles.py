@@ -12,9 +12,6 @@ from app.utils.enums import Role
 router = APIRouter(
     prefix="/vehicles",
     tags=["vehicles"],
-    dependencies=[
-        Depends(require_roles(Role.FLEET_MANAGER.value))
-    ],
 )
 
 
@@ -22,7 +19,11 @@ router = APIRouter(
 def list_vehicles(
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value)
+        require_roles(
+            Role.FLEET_MANAGER.value,
+            Role.DISPATCHER.value,
+            Role.FINANCIAL_ANALYST.value,
+        )
     ),
 ):
     """List all vehicles."""
@@ -34,7 +35,11 @@ def get_vehicle(
     vehicle_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value)
+        require_roles(
+            Role.FLEET_MANAGER.value,
+            Role.DISPATCHER.value,
+            Role.FINANCIAL_ANALYST.value,
+        )
     ),
 ):
     """Get a single vehicle by ID."""

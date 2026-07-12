@@ -12,7 +12,7 @@ def _seed_roles(db):
     db.commit()
 
 
-def _get_token(client: TestClient, db) -> str:
+def _get_token(client: TestClient, db, role: str = "Fleet Manager") -> str:
     """Sign up a user and return a valid JWT token."""
     _seed_roles(db)
     client.post("/auth/signup", json={
@@ -21,7 +21,7 @@ def _get_token(client: TestClient, db) -> str:
     })
     resp = client.post("/auth/login", json={
         "email": "test@test.com", "password": "secret123",
-        "role": "Fleet Manager",
+        "role": role,
     })
     return resp.json()["access_token"]
 
@@ -76,6 +76,19 @@ class TestVehiclesAPI:
         resp = client.get("/vehicles/", headers=_auth(token))
         assert resp.status_code == 200
         assert len(resp.json()) == 2
+
+    def test_financial_analyst_can_list_vehicles(self, client: TestClient, db_session):
+        manager_token = _get_token(client, db_session)
+        token = _get_token(client, db_session, role="Financial Analyst")
+
+        client.post("/vehicles/", json={
+            "registration_number": "VAN-FA", "model": "Finance", "type": "Van",
+            "max_capacity": 500.0,
+        }, headers=_auth(manager_token))
+
+        resp = client.get("/vehicles/", headers=_auth(token))
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
 
     def test_get_vehicle_by_id(self, client: TestClient, db_session):
         token = _get_token(client, db_session)
