@@ -9,7 +9,9 @@ from app.models.user import User
 from app.schemas.driver import DriverCreate, DriverOut, DriverUpdate
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/drivers", tags=["drivers"])
+router = APIRouter(prefix="/drivers", tags=["drivers"], dependencies=[
+    Depends(require_roles(Role.SAFETY_OFFICER.value))
+])
 
 
 @router.get("/", response_model=list[DriverOut])

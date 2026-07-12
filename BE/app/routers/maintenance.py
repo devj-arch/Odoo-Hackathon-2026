@@ -13,7 +13,9 @@ from app.schemas.maintenance_log import (
 from app.services import maintenance_service
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/maintenance", tags=["maintenance"])
+router = APIRouter(prefix="/maintenance", tags=["maintenance"],dependencies=[
+    Depends(require_roles(Role.SAFETY_OFFICER.value))
+],)
 
 
 @router.get("/", response_model=list[MaintenanceLogOut])

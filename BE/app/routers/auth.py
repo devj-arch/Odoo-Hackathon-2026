@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user
-from app.models.role import Role
+from app.models.role import Role as RoleModel
+from app.utils.enums import Role as RoleEnum
 from app.models.user import User
 from app.schemas.auth import (
     ForgotPasswordRequest,
@@ -15,6 +16,9 @@ from app.schemas.auth import (
 from app.schemas.user import UserCreate
 from app.services.auth_services import AuthService
 
+from app.dependencies.auth import require_roles
+
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -22,7 +26,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def signup(data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user account."""
     # Verify the role exists
-    role = db.query(Role).filter(Role.id == data.role_id).first()
+    role = db.query(RoleModel).filter(RoleModel.id == data.role_id).first()
     if not role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
