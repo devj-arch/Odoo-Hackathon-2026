@@ -16,7 +16,7 @@ router = APIRouter(prefix="/drivers", tags=["drivers"])
 def list_drivers(
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_roles(Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
+        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
     ),
 ):
     """List all drivers."""
@@ -28,7 +28,7 @@ def get_driver(
     driver_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_roles(Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
+        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
     ),
 ):
     """Get a single driver by ID."""
@@ -42,7 +42,7 @@ def get_driver(
 def create_driver(
     data: DriverCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(Role.SAFETY_OFFICER.value)),
+    current_user: User = Depends(require_roles(Role.FLEET_MANAGER.value, Role.SAFETY_OFFICER.value)),
 ):
     """Register a new driver."""
     driver = Driver(**data.model_dump())
@@ -64,7 +64,7 @@ def update_driver(
     driver_id: int,
     data: DriverUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(Role.SAFETY_OFFICER.value)),
+    current_user: User = Depends(require_roles(Role.FLEET_MANAGER.value, Role.SAFETY_OFFICER.value)),
 ):
     """Update an existing driver."""
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
@@ -90,7 +90,7 @@ def update_driver(
 def delete_driver(
     driver_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(Role.SAFETY_OFFICER.value)),
+    current_user: User = Depends(require_roles(Role.FLEET_MANAGER.value, Role.SAFETY_OFFICER.value)),
 ):
     """Delete a driver."""
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
