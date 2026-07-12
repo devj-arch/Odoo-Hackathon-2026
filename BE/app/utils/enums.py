@@ -1,36 +1,29 @@
-import enum
+from enum import Enum
 
 
-class Role(str, enum.Enum):
+class Role(str, Enum):
     FLEET_MANAGER = "Fleet Manager"
     DISPATCHER = "Dispatcher"
     SAFETY_OFFICER = "Safety Officer"
     FINANCIAL_ANALYST = "Financial Analyst"
 
 
-class VehicleStatus(str, enum.Enum):
+class VehicleStatus(str, Enum):
     AVAILABLE = "Available"
     ON_TRIP = "On Trip"
     IN_SHOP = "In Shop"
     RETIRED = "Retired"
 
 
-class DriverStatus(str, enum.Enum):
+class DriverStatus(str, Enum):
     AVAILABLE = "Available"
     ON_TRIP = "On Trip"
     OFF_DUTY = "Off Duty"
     SUSPENDED = "Suspended"
 
 
-class TripStatus(str, enum.Enum):
+class TripStatus(str, Enum):
     DRAFT = "Draft"
     DISPATCHED = "Dispatched"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
-
-
-class ExpenseType(str, enum.Enum):
-    TOLL = "Toll"
-    MAINTENANCE = "Maintenance"
-    FUEL = "Fuel"
-    OTHER = "Other"

@@ -1,14 +1,11 @@
 from fastapi import Depends, HTTPException
-
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.repository.user_repository import UserRepository
-
-
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer()
 
@@ -17,6 +14,7 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ):
+    """Decode the JWT and return the authenticated User."""
     token = credentials.credentials
 
     credentials_exception = HTTPException(

@@ -1,14 +1,23 @@
 from sqlalchemy.orm import Session
 
+from app.core.security import create_access_token, verify_password
 from app.repository.user_repository import UserRepository
+<<<<<<< Updated upstream
 from app.core.security import verify_password, create_access_token
 from datetime import datetime, timedelta
+=======
+
+>>>>>>> Stashed changes
 
 class AuthService:
 
     @staticmethod
-    def login(db: Session, email: str, password: str, role: str):
+    def login(db: Session, email: str, password: str, role: str) -> dict | None:
+        """Authenticate user with email, password, and role.
 
+        Returns a dict with access_token, token_type, and user info,
+        or None if credentials are invalid.
+        """
         user = UserRepository.get_by_email(db, email)
 
         if user is None:
@@ -39,7 +48,6 @@ class AuthService:
 
             return None
 
-        # Wrong role
         if user.role.name != role:
             return None
 

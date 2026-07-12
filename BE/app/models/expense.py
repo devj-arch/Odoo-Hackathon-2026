@@ -1,26 +1,31 @@
-from datetime import date
+from datetime import date, datetime
+from typing import Optional
 
-from sqlalchemy import Date, Enum, Float, ForeignKey
+from sqlalchemy import Date, DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
-from app.utils.enums import ExpenseType
+from app.core.database import Base
 
 
-class Expense(BaseModel):
+class Expense(Base):
     __tablename__ = "expenses"
 
-    vehicle_id: Mapped[int] = mapped_column(
-        ForeignKey("vehicles.id"),
-        nullable=True
-    )
-    trip_id: Mapped[int] = mapped_column(
-        ForeignKey("trips.id"),
-        nullable=True
-    )
-    type: Mapped[ExpenseType] = mapped_column(Enum(ExpenseType), nullable=False)
-    amount: Mapped[float] = mapped_column(Float, nullable=False)
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"), nullable=False)
+    trip_id: Mapped[Optional[int]] = mapped_column(ForeignKey("trips.id"), nullable=True)
 
-    vehicle = relationship("Vehicle", back_populates="expenses")
-    trip = relationship("Trip", back_populates="expenses")
+    description: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[float] = mapped_column(Float, nullable=False)
+    expense_date: Mapped[date] = mapped_column(Date, nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    # Relationships
+    vehicle = relationship("Vehicle", lazy="joined")
+    trip = relationship("Trip", lazy="joined")
+
+    def __repr__(self) -> str:
+        return f"<Expense(id={self.id}, category='{self.category}', amount={self.amount})>"

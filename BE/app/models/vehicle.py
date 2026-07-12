@@ -1,5 +1,5 @@
 from sqlalchemy import Enum, Float, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import BaseModel
 from app.utils.enums import VehicleStatus
@@ -8,24 +8,13 @@ from app.utils.enums import VehicleStatus
 class Vehicle(BaseModel):
     __tablename__ = "vehicles"
 
-    reg_no: Mapped[str] = mapped_column(
-        String(30),
-        unique=True,
-        nullable=False,
-        index=True
-    )
+    registration_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     model: Mapped[str] = mapped_column(String(100), nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
-    capacity: Mapped[float] = mapped_column(Float, nullable=False)  # max load in kg
-    odometer: Mapped[float] = mapped_column(Float, default=0)
-    acquisition_cost: Mapped[float] = mapped_column(Float, default=0)
-    status: Mapped[VehicleStatus] = mapped_column(
-        Enum(VehicleStatus),
-        default=VehicleStatus.AVAILABLE,
-        nullable=False
-    )
+    max_capacity: Mapped[float] = mapped_column(Float, nullable=False)
+    odometer: Mapped[float] = mapped_column(Float, default=0.0)
+    acquisition_cost: Mapped[float] = mapped_column(Float, default=0.0)
+    status: Mapped[VehicleStatus] = mapped_column(Enum(VehicleStatus), nullable=False, default=VehicleStatus.AVAILABLE)
 
-    trips = relationship("Trip", back_populates="vehicle")
-    maintenance_logs = relationship("MaintenanceLog", back_populates="vehicle")
-    fuel_logs = relationship("FuelLog", back_populates="vehicle")
-    expenses = relationship("Expense", back_populates="vehicle")
+    def __repr__(self) -> str:
+        return f"<Vehicle(id={self.id}, reg='{self.registration_number}', status='{self.status}')>"
