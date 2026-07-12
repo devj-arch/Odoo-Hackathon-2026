@@ -31,25 +31,33 @@ for role_name in roles:
 db.commit()
 
 
-admin_role = db.query(Role).filter(Role.name == "Admin").first()
+# name, email, password, role name
+seed_users = [
+    ("System Admin", "admin@transitops.com", "admin123", "Admin"),
+    # Personal test account - lets you exercise the forgot-password flow
+    # against a real inbox instead of the placeholder admin address.
+    ("Dhir", "goplanidhir@gmail.com", "Pass1234", "Admin"),
+]
 
 
-admin = db.query(User).filter(
-    User.email == "admin@transitops.com"
-).first()
+for name, email, password, role_name in seed_users:
 
+    role = db.query(Role).filter(Role.name == role_name).first()
 
-if not admin:
+    existing = db.query(User).filter(User.email == email).first()
 
-    admin = User(
-        name="System Admin",
-        email="admin@transitops.com",
-        password_hash=hash_password("admin123"),
-        role_id=admin_role.id,
-    )
+    if not existing:
 
-    db.add(admin)
+        user = User(
+            name=name,
+            email=email,
+            password_hash=hash_password(password),
+            role_id=role.id,
+        )
 
-    db.commit()
+        db.add(user)
+
+        db.commit()
+
 
 print("Database Seeded Successfully")
