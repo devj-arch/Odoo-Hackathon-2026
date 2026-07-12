@@ -9,7 +9,13 @@ from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleOut, VehicleUpdate
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/vehicles", tags=["vehicles"])
+router = APIRouter(
+    prefix="/vehicles",
+    tags=["vehicles"],
+    dependencies=[
+        Depends(require_roles(Role.FLEET_MANAGER.value))
+    ],
+)
 
 
 @router.get("/", response_model=list[VehicleOut])

@@ -9,7 +9,9 @@ from app.schemas.trip import TripComplete, TripCreate, TripListOut, TripOut
 from app.services import trip_service
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/trips", tags=["trips"])
+router = APIRouter(prefix="/trips", tags=["trips"], dependencies=[
+    Depends(require_roles(Role.DISPATCHER.value))
+],)
 
 
 @router.get("/", response_model=list[TripListOut])
