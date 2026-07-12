@@ -22,17 +22,24 @@ def login(
     db: Session = Depends(get_db),
 ):
 
-    result = AuthService.login(
-        db=db,
-        email=request.email,
-        password=request.password,
-        role=request.role,
-    )
+    try:
+        result = AuthService.login(
+            db=db,
+            email=request.email,
+            password=request.password,
+            role=request.role,
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=403,
+            detail=str(e)
+        )
 
     if result is None:
         raise HTTPException(
             status_code=401,
-            detail="Invalid email, password or role",
+            detail="Invalid email, password or role"
         )
 
     return result

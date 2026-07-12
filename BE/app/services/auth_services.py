@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.repository.user_repository import UserRepository
 from app.core.security import verify_password, create_access_token
-
+from datetime import datetime, timedelta
 
 class AuthService:
 
@@ -14,12 +14,41 @@ class AuthService:
         if user is None:
             return None
 
+        # Check if account is locked
+        if user.is_locked:
+
+            if user.locked_until and datetime.utcnow() < user.locked_until:
+                raise Exception("Account locked after 5 failed attempts. Try again later.")
+
+            # Lock expired
+            user.is_locked = False
+            user.failed_login_attempts = 0
+            user.locked_until = None
+            db.commit()
+
+        # Wrong password
         if not verify_password(password, user.password_hash):
+
+            user.failed_login_attempts += 1
+
+            if user.failed_login_attempts >= 5:
+                user.is_locked = True
+                user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+
+            db.commit()
+
             return None
 
-        
+        # Wrong role
         if user.role.name != role:
             return None
+
+        # Successful login
+        user.failed_login_attempts = 0
+        user.is_locked = False
+        user.locked_until = None
+
+        db.commit()
 
         token = create_access_token(
             {
