@@ -14,6 +14,7 @@ import {
   createMaintenanceLog,
   closeMaintenanceLog,
 } from "../lib/api.js";
+import { formatDate } from "../lib/format.js";
 import Modal from "../components/Modal.jsx";
 
 const MAINTENANCE_TYPES = [
@@ -39,6 +40,7 @@ export default function MaintenanceLog() {
     maintenance_type: "Oil Change",
     description: "",
     cost: "",
+    start_date: new Date().toISOString().split("T")[0],
   });
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function MaintenanceLog() {
       maintenance_type: "Oil Change",
       description: "",
       cost: "",
+      start_date: new Date().toISOString().split("T")[0],
     });
     setShowModal(true);
   }
@@ -83,6 +86,7 @@ export default function MaintenanceLog() {
         maintenance_type: formData.maintenance_type,
         description: formData.description,
         cost: formData.cost ? parseFloat(formData.cost) : 0,
+        start_date: formData.start_date,
       };
 
       await createMaintenanceLog(payload);
@@ -112,7 +116,7 @@ export default function MaintenanceLog() {
   }
 
   const getVehicleName = (id) => {
-    return vehicles.find((v) => v.id === id)?.vehicle_name || "Unknown";
+    return vehicles.find((v) => v.id === id)?.model || "Unknown";
   };
 
   const getVehicleRegistration = (id) => {
@@ -126,8 +130,8 @@ export default function MaintenanceLog() {
     }).format(amount);
   };
 
-  const openLogs = logs.filter((log) => log.status === "Open");
-  const closedLogs = logs.filter((log) => log.status === "Closed");
+  const openLogs = logs.filter((log) => log.is_active);
+  const closedLogs = logs.filter((log) => !log.is_active);
 
   return (
     <div className="min-h-screen bg-paper">
@@ -235,7 +239,7 @@ export default function MaintenanceLog() {
                             Started
                           </p>
                           <p className="mt-2 text-sm text-text">
-                            {new Date(log.created_at).toLocaleDateString()}
+                            {formatDate(log.start_date)}
                           </p>
                         </div>
                       </div>
@@ -319,10 +323,8 @@ export default function MaintenanceLog() {
                             {formatCurrency(log.cost)}
                           </td>
                           <td className="px-6 py-4 text-sm text-text">
-                            {new Date(log.created_at).toLocaleDateString()} to{" "}
-                            {log.closed_at
-                              ? new Date(log.closed_at).toLocaleDateString()
-                              : "-"}
+                            {formatDate(log.start_date)} to{" "}
+                            {log.end_date ? formatDate(log.end_date) : "-"}
                           </td>
                         </tr>
                       ))}
@@ -356,7 +358,7 @@ export default function MaintenanceLog() {
                 <option value="">Select a vehicle</option>
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_name} ({v.registration_number})
+                    {v.model} ({v.registration_number})
                   </option>
                 ))}
               </select>
@@ -378,6 +380,18 @@ export default function MaintenanceLog() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Start Date *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
             </div>
           </div>
 

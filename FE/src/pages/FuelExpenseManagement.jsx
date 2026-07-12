@@ -16,6 +16,7 @@ import {
   deleteFuelLog,
   deleteExpense,
 } from "../lib/api.js";
+import { formatDate } from "../lib/format.js";
 import Modal from "../components/Modal.jsx";
 
 const EXPENSE_TYPES = ["Toll", "Parking", "Maintenance", "Insurance", "Other"];
@@ -33,13 +34,13 @@ export default function FuelExpenseManagement() {
     vehicle_id: "",
     liters: "",
     cost: "",
-    date: new Date().toISOString().split("T")[0],
+    fuel_date: new Date().toISOString().split("T")[0],
   });
   const [expenseData, setExpenseData] = useState({
     vehicle_id: "",
-    expense_type: "Toll",
+    category: "Toll",
     amount: "",
-    date: new Date().toISOString().split("T")[0],
+    expense_date: new Date().toISOString().split("T")[0],
     description: "",
   });
 
@@ -76,7 +77,7 @@ export default function FuelExpenseManagement() {
         vehicle_id: parseInt(fuelData.vehicle_id),
         liters: parseFloat(fuelData.liters),
         cost: parseFloat(fuelData.cost),
-        date: fuelData.date,
+        fuel_date: fuelData.fuel_date,
       };
 
       await createFuelLog(payload);
@@ -86,7 +87,7 @@ export default function FuelExpenseManagement() {
         vehicle_id: "",
         liters: "",
         cost: "",
-        date: new Date().toISOString().split("T")[0],
+        fuel_date: new Date().toISOString().split("T")[0],
       });
       fetchData();
     } catch (err) {
@@ -102,9 +103,9 @@ export default function FuelExpenseManagement() {
     try {
       const payload = {
         vehicle_id: parseInt(expenseData.vehicle_id),
-        expense_type: expenseData.expense_type,
+        category: expenseData.category,
         amount: parseFloat(expenseData.amount),
-        date: expenseData.date,
+        expense_date: expenseData.expense_date,
         description: expenseData.description,
       };
 
@@ -113,9 +114,9 @@ export default function FuelExpenseManagement() {
       setShowExpenseModal(false);
       setExpenseData({
         vehicle_id: "",
-        expense_type: "Toll",
+        category: "Toll",
         amount: "",
-        date: new Date().toISOString().split("T")[0],
+        expense_date: new Date().toISOString().split("T")[0],
         description: "",
       });
       fetchData();
@@ -149,7 +150,7 @@ export default function FuelExpenseManagement() {
   }
 
   const getVehicleName = (id) => {
-    return vehicles.find((v) => v.id === id)?.vehicle_name || "Unknown";
+    return vehicles.find((v) => v.id === id)?.model || "Unknown";
   };
 
   const formatCurrency = (amount) => {
@@ -285,7 +286,7 @@ export default function FuelExpenseManagement() {
                           <div>
                             <p className="text-xs text-muted">Date</p>
                             <p className="text-sm text-text">
-                              {new Date(log.date).toLocaleDateString()}
+                              {formatDate(log.fuel_date)}
                             </p>
                           </div>
                         </div>
@@ -325,7 +326,7 @@ export default function FuelExpenseManagement() {
                         <div className="mt-2 grid grid-cols-3 gap-4">
                           <div>
                             <p className="text-xs text-muted">Type</p>
-                            <p className="font-semibold text-text">{exp.expense_type}</p>
+                            <p className="font-semibold text-text">{exp.category}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted">Amount</p>
@@ -336,7 +337,7 @@ export default function FuelExpenseManagement() {
                           <div>
                             <p className="text-xs text-muted">Date</p>
                             <p className="text-sm text-text">
-                              {new Date(exp.date).toLocaleDateString()}
+                              {formatDate(exp.expense_date)}
                             </p>
                           </div>
                         </div>
@@ -382,7 +383,7 @@ export default function FuelExpenseManagement() {
                 <option value="">Select a vehicle</option>
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_name}
+                    {v.model}
                   </option>
                 ))}
               </select>
@@ -394,8 +395,8 @@ export default function FuelExpenseManagement() {
               <input
                 type="date"
                 required
-                value={fuelData.date}
-                onChange={(e) => setFuelData({ ...fuelData, date: e.target.value })}
+                value={fuelData.fuel_date}
+                onChange={(e) => setFuelData({ ...fuelData, fuel_date: e.target.value })}
                 className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
               />
             </div>
@@ -470,7 +471,7 @@ export default function FuelExpenseManagement() {
                 <option value="">Select a vehicle</option>
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_name}
+                    {v.model}
                   </option>
                 ))}
               </select>
@@ -482,9 +483,9 @@ export default function FuelExpenseManagement() {
               <input
                 type="date"
                 required
-                value={expenseData.date}
+                value={expenseData.expense_date}
                 onChange={(e) =>
-                  setExpenseData({ ...expenseData, date: e.target.value })
+                  setExpenseData({ ...expenseData, expense_date: e.target.value })
                 }
                 className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
               />
@@ -494,9 +495,9 @@ export default function FuelExpenseManagement() {
                 Expense Type *
               </label>
               <select
-                value={expenseData.expense_type}
+                value={expenseData.category}
                 onChange={(e) =>
-                  setExpenseData({ ...expenseData, expense_type: e.target.value })
+                  setExpenseData({ ...expenseData, category: e.target.value })
                 }
                 className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
               >

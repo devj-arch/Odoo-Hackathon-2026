@@ -10,6 +10,7 @@ import {
   IconAlertCircle,
 } from "../components/Icons.jsx";
 import { listDrivers, createDriver, updateDriver, deleteDriver } from "../lib/api.js";
+import { formatDate } from "../lib/format.js";
 import Modal from "../components/Modal.jsx";
 
 const LICENSE_CATEGORIES = ["LMV-Auto", "HMV", "HGMV", "All"];
@@ -26,8 +27,8 @@ export default function DriverManagement() {
     name: "",
     license_number: "",
     license_category: "LMV-Auto",
-    license_expiry_date: "",
-    contact_number: "",
+    license_expiry: "",
+    contact: "",
     safety_score: "85",
     status: "Available",
   });
@@ -55,8 +56,8 @@ export default function DriverManagement() {
       name: "",
       license_number: "",
       license_category: "LMV-Auto",
-      license_expiry_date: "",
-      contact_number: "",
+      license_expiry: "",
+      contact: "",
       safety_score: "85",
       status: "Available",
     });
@@ -69,8 +70,8 @@ export default function DriverManagement() {
       name: driver.name,
       license_number: driver.license_number,
       license_category: driver.license_category,
-      license_expiry_date: driver.license_expiry_date,
-      contact_number: driver.contact_number,
+      license_expiry: driver.license_expiry,
+      contact: driver.contact,
       safety_score: driver.safety_score.toString(),
       status: driver.status,
     });
@@ -224,9 +225,9 @@ export default function DriverManagement() {
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-text">
-                          {new Date(driver.license_expiry_date).toLocaleDateString()}
+                          {formatDate(driver.license_expiry)}
                         </span>
-                        {isLicenseExpiring(driver.license_expiry_date) && (
+                        {isLicenseExpiring(driver.license_expiry) && (
                           <IconAlertCircle width="16" height="16" className="text-alert" />
                         )}
                       </div>
@@ -336,9 +337,9 @@ export default function DriverManagement() {
               <input
                 type="date"
                 required
-                value={formData.license_expiry_date}
+                value={formData.license_expiry}
                 onChange={(e) =>
-                  setFormData({ ...formData, license_expiry_date: e.target.value })
+                  setFormData({ ...formData, license_expiry: e.target.value })
                 }
                 className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
               />
@@ -349,9 +350,9 @@ export default function DriverManagement() {
               </label>
               <input
                 type="tel"
-                value={formData.contact_number}
+                value={formData.contact}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact_number: e.target.value })
+                  setFormData({ ...formData, contact: e.target.value })
                 }
                 placeholder="e.g., +91-9876543210"
                 className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"

@@ -145,7 +145,7 @@ export default function Reports() {
               >
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_name} ({v.registration_number})
+                    {v.model} ({v.registration_number})
                   </option>
                 ))}
               </select>
@@ -156,7 +156,7 @@ export default function Reports() {
                 {/* Vehicle Details */}
                 <div className="mb-8 rounded-lg border border-black/10 bg-white p-6">
                   <h2 className="font-display text-lg font-semibold text-text mb-4">
-                    {selectedVehicle.vehicle_name}
+                    {selectedVehicle.model}
                   </h2>
                   <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                     <div>
@@ -172,7 +172,7 @@ export default function Reports() {
                         Type
                       </p>
                       <p className="mt-2 font-semibold text-text">
-                        {selectedVehicle.vehicle_type}
+                        {selectedVehicle.type}
                       </p>
                     </div>
                     <div>
@@ -180,7 +180,7 @@ export default function Reports() {
                         Capacity
                       </p>
                       <p className="mt-2 font-semibold text-text">
-                        {selectedVehicle.max_load_capacity} kg
+                        {selectedVehicle.max_capacity} kg
                       </p>
                     </div>
                     <div>
@@ -220,7 +220,7 @@ export default function Reports() {
                             </p>
                             <p className="mt-3 font-display text-2xl font-semibold text-text">
                               {metrics.operationalCost
-                                ? formatCurrency(metrics.operationalCost.total_cost)
+                                ? formatCurrency(metrics.operationalCost.total_operational_cost)
                                 : "—"}
                             </p>
                           </div>
@@ -255,7 +255,7 @@ export default function Reports() {
                             </p>
                             <p className="mt-3 font-display text-2xl font-semibold text-text">
                               {metrics.fuelEfficiency
-                                ? `${metrics.fuelEfficiency.km_per_liter.toFixed(2)} km/L`
+                                ? `${metrics.fuelEfficiency.fuel_efficiency_km_per_liter.toFixed(2)} km/L`
                                 : "—"}
                             </p>
                           </div>
@@ -268,13 +268,13 @@ export default function Reports() {
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Total Distance:</span>
                               <span className="font-medium text-text">
-                                {metrics.fuelEfficiency.total_distance.toLocaleString()} km
+                                {metrics.fuelEfficiency.total_distance_km.toLocaleString()} km
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Total Fuel:</span>
                               <span className="font-medium text-text">
-                                {metrics.fuelEfficiency.total_fuel.toFixed(2)} L
+                                {metrics.fuelEfficiency.total_fuel_liters.toFixed(2)} L
                               </span>
                             </div>
                           </div>
@@ -290,7 +290,7 @@ export default function Reports() {
                             </p>
                             <p className="mt-3 font-display text-2xl font-semibold text-text">
                               {metrics.roi
-                                ? `${(metrics.roi.roi * 100).toFixed(2)}%`
+                                ? `${metrics.roi.roi_pct.toFixed(2)}%`
                                 : "—"}
                             </p>
                           </div>
@@ -303,13 +303,13 @@ export default function Reports() {
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Revenue:</span>
                               <span className="font-medium text-text">
-                                {formatCurrency(metrics.roi.revenue)}
+                                {formatCurrency(metrics.roi.total_revenue)}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Costs:</span>
                               <span className="font-medium text-text">
-                                {formatCurrency(metrics.roi.total_cost)}
+                                {formatCurrency(metrics.roi.total_costs)}
                               </span>
                             </div>
                           </div>

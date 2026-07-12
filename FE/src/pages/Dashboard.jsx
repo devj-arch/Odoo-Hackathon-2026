@@ -9,6 +9,7 @@ import {
   IconLogOut,
   IconChevronRight,
   IconBarChart3,
+  IconUser,
 } from "../components/Icons.jsx";
 import { getDashboardKpis, logout } from "../lib/api.js";
 import { clearSession } from "../lib/auth.js";
@@ -108,7 +109,7 @@ export default function Dashboard() {
               />
               <KpiCard
                 title="In Maintenance"
-                value={kpis.in_maintenance_vehicles}
+                value={kpis.vehicles_in_maintenance}
                 icon={IconAlertCircle}
                 color="alert"
               />
@@ -125,8 +126,14 @@ export default function Dashboard() {
                 color="muted"
               />
               <KpiCard
+                title="Drivers On Duty"
+                value={kpis.drivers_on_duty}
+                icon={IconUser}
+                color="signal"
+              />
+              <KpiCard
                 title="Fleet Utilization"
-                value={`${kpis.fleet_utilization}%`}
+                value={`${kpis.fleet_utilization_pct}%`}
                 icon={IconBarChart3}
                 color="transit"
               />
