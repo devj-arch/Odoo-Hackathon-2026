@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   IconPlus,
   IconEdit,
   IconTrash2,
-  IconChevronLeft,
   IconAlert,
   IconCheckCircle,
 } from "../components/Icons.jsx";
 import { listVehicles, createVehicle, updateVehicle, deleteVehicle } from "../lib/api.js";
 import Modal from "../components/Modal.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
 const VEHICLE_TYPES = ["Van", "Truck", "Bike", "Car"];
 const VEHICLE_STATUSES = ["Available", "On Trip", "In Shop", "Retired"];
@@ -109,17 +108,12 @@ export default function VehicleRegistry() {
   }
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper md:pl-64">
+      <Sidebar />
+
       {/* Header */}
-      <header className="border-b border-black/10 bg-white">
+      <header className="border-b border-black/10 bg-white pt-14 md:pt-0">
         <div className="mx-auto max-w-7xl px-6 py-4 md:px-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-text transition mb-4"
-          >
-            <IconChevronLeft width="18" height="18" />
-            Back to Dashboard
-          </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-display text-2xl font-semibold text-text">Vehicle Registry</h1>

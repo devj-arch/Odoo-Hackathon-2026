@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
-  IconChevronLeft,
   IconAlert,
   IconBarChart3,
   IconTrendingUp,
+  IconDownload,
 } from "../components/Icons.jsx";
 import {
   listVehicles,
@@ -14,6 +13,7 @@ import {
   listFuelLogs,
   listExpenses,
 } from "../lib/api.js";
+import Sidebar from "../components/Sidebar.jsx";
 
 export default function Reports() {
   const [vehicles, setVehicles] = useState([]);
@@ -84,6 +84,55 @@ export default function Reports() {
     fetchVehicleMetrics(vehicleId);
   }
 
+  function handleExportCsv() {
+    if (!selectedVehicle) return;
+
+    const rows = [
+      ["Metric", "Value"],
+      ["Vehicle", selectedVehicle.model],
+      ["Registration", selectedVehicle.registration_number],
+      ["Type", selectedVehicle.type],
+      ["Capacity (kg)", selectedVehicle.max_capacity],
+      ["Odometer (km)", selectedVehicle.odometer],
+      [
+        "Operational Cost",
+        metrics.operationalCost?.total_operational_cost ?? "",
+      ],
+      ["Fuel Cost", metrics.operationalCost?.fuel_cost ?? ""],
+      ["Maintenance Cost", metrics.operationalCost?.maintenance_cost ?? ""],
+      [
+        "Fuel Efficiency (km/L)",
+        metrics.fuelEfficiency?.fuel_efficiency_km_per_liter?.toFixed(2) ?? "",
+      ],
+      ["ROI (%)", metrics.roi?.roi_pct?.toFixed(2) ?? ""],
+      ["Total Fuel Liters", totalFuelLiters.toFixed(2)],
+      ["Total Fuel Cost", totalFuelCost.toFixed(2)],
+      ["Total Expenses", totalExpenses.toFixed(2)],
+      ["Number of Expense Records", vehicleExpenses.length],
+    ];
+
+    const csvContent = rows
+      .map((row) =>
+        row
+          .map((value) => {
+            const str = String(value ?? "");
+            return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${selectedVehicle.registration_number}-report.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -100,19 +149,26 @@ export default function Reports() {
   const totalFuelLiters = vehicleFuelLogs.reduce((sum, log) => sum + log.liters, 0);
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper md:pl-64">
+      <Sidebar />
+
       {/* Header */}
-      <header className="border-b border-black/10 bg-white">
+      <header className="border-b border-black/10 bg-white pt-14 md:pt-0">
         <div className="mx-auto max-w-7xl px-6 py-4 md:px-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-text transition mb-4"
-          >
-            <IconChevronLeft width="18" height="18" />
-            Back to Dashboard
-          </Link>
-          <h1 className="font-display text-2xl font-semibold text-text">Reports & Analytics</h1>
-          <p className="mt-1 text-sm text-muted">Fleet performance and operational insights</p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-text">Reports & Analytics</h1>
+              <p className="mt-1 text-sm text-muted">Fleet performance and operational insights</p>
+            </div>
+            <button
+              onClick={handleExportCsv}
+              disabled={!selectedVehicle}
+              className="flex items-center gap-2 rounded-md bg-signal px-4 py-2 text-sm font-medium text-ink transition hover:bg-signal-dark disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <IconDownload width="18" height="18" />
+              Export CSV
+            </button>
+          </div>
         </div>
       </header>
 
@@ -145,7 +201,7 @@ export default function Reports() {
               >
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_name} ({v.registration_number})
+                    {v.model} ({v.registration_number})
                   </option>
                 ))}
               </select>
@@ -156,7 +212,7 @@ export default function Reports() {
                 {/* Vehicle Details */}
                 <div className="mb-8 rounded-lg border border-black/10 bg-white p-6">
                   <h2 className="font-display text-lg font-semibold text-text mb-4">
-                    {selectedVehicle.vehicle_name}
+                    {selectedVehicle.model}
                   </h2>
                   <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                     <div>
@@ -172,7 +228,7 @@ export default function Reports() {
                         Type
                       </p>
                       <p className="mt-2 font-semibold text-text">
-                        {selectedVehicle.vehicle_type}
+                        {selectedVehicle.type}
                       </p>
                     </div>
                     <div>
@@ -180,7 +236,7 @@ export default function Reports() {
                         Capacity
                       </p>
                       <p className="mt-2 font-semibold text-text">
-                        {selectedVehicle.max_load_capacity} kg
+                        {selectedVehicle.max_capacity} kg
                       </p>
                     </div>
                     <div>
@@ -220,7 +276,7 @@ export default function Reports() {
                             </p>
                             <p className="mt-3 font-display text-2xl font-semibold text-text">
                               {metrics.operationalCost
-                                ? formatCurrency(metrics.operationalCost.total_cost)
+                                ? formatCurrency(metrics.operationalCost.total_operational_cost)
                                 : "—"}
                             </p>
                           </div>
@@ -255,7 +311,7 @@ export default function Reports() {
                             </p>
                             <p className="mt-3 font-display text-2xl font-semibold text-text">
                               {metrics.fuelEfficiency
-                                ? `${metrics.fuelEfficiency.km_per_liter.toFixed(2)} km/L`
+                                ? `${metrics.fuelEfficiency.fuel_efficiency_km_per_liter.toFixed(2)} km/L`
                                 : "—"}
                             </p>
                           </div>
@@ -268,13 +324,13 @@ export default function Reports() {
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Total Distance:</span>
                               <span className="font-medium text-text">
-                                {metrics.fuelEfficiency.total_distance.toLocaleString()} km
+                                {metrics.fuelEfficiency.total_distance_km.toLocaleString()} km
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Total Fuel:</span>
                               <span className="font-medium text-text">
-                                {metrics.fuelEfficiency.total_fuel.toFixed(2)} L
+                                {metrics.fuelEfficiency.total_fuel_liters.toFixed(2)} L
                               </span>
                             </div>
                           </div>
@@ -290,7 +346,7 @@ export default function Reports() {
                             </p>
                             <p className="mt-3 font-display text-2xl font-semibold text-text">
                               {metrics.roi
-                                ? `${(metrics.roi.roi * 100).toFixed(2)}%`
+                                ? `${metrics.roi.roi_pct.toFixed(2)}%`
                                 : "—"}
                             </p>
                           </div>
@@ -303,13 +359,13 @@ export default function Reports() {
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Revenue:</span>
                               <span className="font-medium text-text">
-                                {formatCurrency(metrics.roi.revenue)}
+                                {formatCurrency(metrics.roi.total_revenue)}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-muted">Costs:</span>
                               <span className="font-medium text-text">
-                                {formatCurrency(metrics.roi.total_cost)}
+                                {formatCurrency(metrics.roi.total_costs)}
                               </span>
                             </div>
                           </div>

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   IconPlus,
-  IconChevronLeft,
   IconAlert,
   IconCheckCircle,
   IconPlay,
@@ -19,6 +17,8 @@ import {
   completeTrip,
   cancelTrip,
 } from "../lib/api.js";
+import { formatDate } from "../lib/format.js";
+import Sidebar from "../components/Sidebar.jsx";
 import Modal from "../components/Modal.jsx";
 
 const TRIP_STATUSES = ["Draft", "Dispatched", "Completed", "Cancelled"];
@@ -42,8 +42,7 @@ export default function TripDispatcher() {
     planned_distance: "",
   });
   const [completeData, setCompleteData] = useState({
-    final_odometer: "",
-    fuel_consumed: "",
+    actual_distance: "",
   });
 
   useEffect(() => {
@@ -117,8 +116,7 @@ export default function TripDispatcher() {
   function openCompleteModal(trip) {
     setSelectedTrip(trip);
     setCompleteData({
-      final_odometer: "",
-      fuel_consumed: "",
+      actual_distance: "",
     });
     setShowCompleteModal(true);
   }
@@ -130,8 +128,7 @@ export default function TripDispatcher() {
 
     try {
       const payload = {
-        final_odometer: parseFloat(completeData.final_odometer),
-        fuel_consumed: parseFloat(completeData.fuel_consumed),
+        actual_distance: parseFloat(completeData.actual_distance),
       };
 
       await completeTrip(selectedTrip.id, payload);
@@ -156,7 +153,7 @@ export default function TripDispatcher() {
   }
 
   const getVehicleName = (id) => {
-    return vehicles.find((v) => v.id === id)?.vehicle_name || "Unknown";
+    return vehicles.find((v) => v.id === id)?.model || "Unknown";
   };
 
   const getDriverName = (id) => {
@@ -169,22 +166,17 @@ export default function TripDispatcher() {
 
   const getAvailableDrivers = () => {
     return drivers.filter(
-      (d) => d.status === "Available" && new Date(d.license_expiry_date) > new Date()
+      (d) => d.status === "Available" && new Date(d.license_expiry) > new Date()
     );
   };
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper md:pl-64">
+      <Sidebar />
+
       {/* Header */}
-      <header className="border-b border-black/10 bg-white">
+      <header className="border-b border-black/10 bg-white pt-14 md:pt-0">
         <div className="mx-auto max-w-7xl px-6 py-4 md:px-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-text transition mb-4"
-          >
-            <IconChevronLeft width="18" height="18" />
-            Back to Dashboard
-          </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-display text-2xl font-semibold text-text">Trip Dispatcher</h1>
@@ -282,13 +274,13 @@ export default function TripDispatcher() {
                   <div className="rounded-md bg-paper-soft p-3">
                     <p className="text-xs text-muted">Created</p>
                     <p className="mt-1 font-semibold text-text text-sm">
-                      {new Date(trip.created_at).toLocaleDateString()}
+                      {formatDate(trip.created_at)}
                     </p>
                   </div>
                   <div className="rounded-md bg-paper-soft p-3">
                     <p className="text-xs text-muted">Updated</p>
                     <p className="mt-1 font-semibold text-text text-sm">
-                      {new Date(trip.updated_at).toLocaleDateString()}
+                      {formatDate(trip.updated_at)}
                     </p>
                   </div>
                 </div>
@@ -394,7 +386,7 @@ export default function TripDispatcher() {
                 <option value="">Select an available vehicle</option>
                 {getAvailableVehicles().map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_name} ({v.registration_number})
+                    {v.model} ({v.registration_number})
                   </option>
                 ))}
               </select>
@@ -473,32 +465,17 @@ export default function TripDispatcher() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Final Odometer (km) *
-              </label>
-              <input
-                type="number"
-                required
-                value={completeData.final_odometer}
-                onChange={(e) =>
-                  setCompleteData({ ...completeData, final_odometer: e.target.value })
-                }
-                placeholder="e.g., 15050"
-                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text mb-1.5">
-                Fuel Consumed (liters) *
+                Actual Distance (km) *
               </label>
               <input
                 type="number"
                 required
                 step="0.01"
-                value={completeData.fuel_consumed}
+                value={completeData.actual_distance}
                 onChange={(e) =>
-                  setCompleteData({ ...completeData, fuel_consumed: e.target.value })
+                  setCompleteData({ ...completeData, actual_distance: e.target.value })
                 }
-                placeholder="e.g., 12.5"
+                placeholder="e.g., 87.5"
                 className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
               />
             </div>
