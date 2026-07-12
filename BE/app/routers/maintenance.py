@@ -1,0 +1,85 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.core.exceptions import AppException
+from app.dependencies.auth import get_current_user
+from app.models.maintenance_log import MaintenanceLog
+from app.schemas.maintenance_log import (
+    MaintenanceLogCreate,
+    MaintenanceLogOut,
+    MaintenanceLogUpdate,
+)
+from app.services import maintenance_service
+
+router = APIRouter(prefix="/maintenance", tags=["maintenance"])
+
+
+@router.get("/", response_model=list[MaintenanceLogOut])
+def list_maintenance_logs(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """List all maintenance logs."""
+    return db.query(MaintenanceLog).order_by(MaintenanceLog.created_at.desc()).all()
+
+
+@router.get("/{log_id}", response_model=MaintenanceLogOut)
+def get_maintenance_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Get a single maintenance log by ID."""
+    log = db.query(MaintenanceLog).filter(MaintenanceLog.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Maintenance log not found.")
+    return log
+
+
+@router.post("/", response_model=MaintenanceLogOut, status_code=status.HTTP_201_CREATED)
+def create_maintenance_log(
+    data: MaintenanceLogCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Open a new maintenance record. Sets vehicle status to In Shop."""
+    try:
+        log = maintenance_service.open_maintenance(db, data.model_dump())
+    except AppException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return log
+
+
+@router.patch("/{log_id}", response_model=MaintenanceLogOut)
+def update_maintenance_log(
+    log_id: int,
+    data: MaintenanceLogUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Update a maintenance log's details (not closing it)."""
+    log = db.query(MaintenanceLog).filter(MaintenanceLog.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Maintenance log not found.")
+
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(log, field, value)
+
+    db.commit()
+    db.refresh(log)
+    return log
+
+
+@router.post("/{log_id}/close", response_model=MaintenanceLogOut)
+def close_maintenance_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Close a maintenance record. Restores vehicle to Available (unless Retired)."""
+    try:
+        log = maintenance_service.close_maintenance(db, log_id)
+    except AppException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    return log
