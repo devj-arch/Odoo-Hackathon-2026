@@ -16,6 +16,13 @@ export function getStoredUser() {
   return raw ? JSON.parse(raw) : null;
 }
 
+export function getSession() {
+  const token = getToken();
+  const user = getStoredUser();
+
+  return token ? { token, user } : null;
+}
+
 export function setSession({ token, user, remember }) {
   const storage = remember ? window.localStorage : window.sessionStorage;
   storage.setItem(TOKEN_KEY, token);

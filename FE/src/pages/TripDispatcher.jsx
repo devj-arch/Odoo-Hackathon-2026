@@ -1,0 +1,543 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  IconPlus,
+  IconChevronLeft,
+  IconAlert,
+  IconCheckCircle,
+  IconPlay,
+  IconCheck,
+  IconX,
+  IconEye,
+} from "../components/Icons.jsx";
+import {
+  listTrips,
+  listVehicles,
+  listDrivers,
+  createTrip,
+  dispatchTrip,
+  completeTrip,
+  cancelTrip,
+} from "../lib/api.js";
+import Modal from "../components/Modal.jsx";
+
+const TRIP_STATUSES = ["Draft", "Dispatched", "Completed", "Cancelled"];
+
+export default function TripDispatcher() {
+  const [trips, setTrips] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [formData, setFormData] = useState({
+    source: "",
+    destination: "",
+    vehicle_id: "",
+    driver_id: "",
+    cargo_weight: "",
+    planned_distance: "",
+  });
+  const [completeData, setCompleteData] = useState({
+    final_odometer: "",
+    fuel_consumed: "",
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      setLoading(true);
+      const [tripsData, vehiclesData, driversData] = await Promise.all([
+        listTrips(),
+        listVehicles(),
+        listDrivers(),
+      ]);
+      setTrips(tripsData || []);
+      setVehicles(vehiclesData || []);
+      setDrivers(driversData || []);
+    } catch (err) {
+      setError("Failed to load data");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openCreateModal() {
+    setFormData({
+      source: "",
+      destination: "",
+      vehicle_id: "",
+      driver_id: "",
+      cargo_weight: "",
+      planned_distance: "",
+    });
+    setShowCreateModal(true);
+  }
+
+  async function handleCreateTrip(e) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    try {
+      const payload = {
+        ...formData,
+        vehicle_id: parseInt(formData.vehicle_id),
+        driver_id: parseInt(formData.driver_id),
+        cargo_weight: parseFloat(formData.cargo_weight),
+        planned_distance: parseFloat(formData.planned_distance),
+      };
+
+      await createTrip(payload);
+      setSuccess("Trip created successfully");
+      setShowCreateModal(false);
+      fetchData();
+    } catch (err) {
+      setError(err.message || "Failed to create trip");
+    }
+  }
+
+  async function handleDispatchTrip(tripId) {
+    try {
+      await dispatchTrip(tripId);
+      setSuccess("Trip dispatched successfully");
+      fetchData();
+    } catch (err) {
+      setError(err.message || "Failed to dispatch trip");
+    }
+  }
+
+  function openCompleteModal(trip) {
+    setSelectedTrip(trip);
+    setCompleteData({
+      final_odometer: "",
+      fuel_consumed: "",
+    });
+    setShowCompleteModal(true);
+  }
+
+  async function handleCompleteTrip(e) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    try {
+      const payload = {
+        final_odometer: parseFloat(completeData.final_odometer),
+        fuel_consumed: parseFloat(completeData.fuel_consumed),
+      };
+
+      await completeTrip(selectedTrip.id, payload);
+      setSuccess("Trip completed successfully");
+      setShowCompleteModal(false);
+      fetchData();
+    } catch (err) {
+      setError(err.message || "Failed to complete trip");
+    }
+  }
+
+  async function handleCancelTrip(tripId) {
+    if (!confirm("Are you sure you want to cancel this trip?")) return;
+
+    try {
+      await cancelTrip(tripId);
+      setSuccess("Trip cancelled successfully");
+      fetchData();
+    } catch (err) {
+      setError(err.message || "Failed to cancel trip");
+    }
+  }
+
+  const getVehicleName = (id) => {
+    return vehicles.find((v) => v.id === id)?.vehicle_name || "Unknown";
+  };
+
+  const getDriverName = (id) => {
+    return drivers.find((d) => d.id === id)?.name || "Unknown";
+  };
+
+  const getAvailableVehicles = () => {
+    return vehicles.filter((v) => v.status === "Available");
+  };
+
+  const getAvailableDrivers = () => {
+    return drivers.filter(
+      (d) => d.status === "Available" && new Date(d.license_expiry_date) > new Date()
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-paper">
+      {/* Header */}
+      <header className="border-b border-black/10 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-4 md:px-8">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-sm text-muted hover:text-text transition mb-4"
+          >
+            <IconChevronLeft width="18" height="18" />
+            Back to Dashboard
+          </Link>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-text">Trip Dispatcher</h1>
+              <p className="mt-1 text-sm text-muted">Create and manage delivery trips</p>
+            </div>
+            <button
+              onClick={openCreateModal}
+              className="flex items-center gap-2 rounded-md bg-signal px-4 py-2 text-sm font-medium text-ink hover:bg-signal-dark transition"
+            >
+              <IconPlus width="18" height="18" />
+              Create Trip
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="mx-auto max-w-7xl px-6 py-8 md:px-8">
+        {error && (
+          <div className="mb-6 flex items-start gap-3 rounded-md border border-alert/25 bg-alert-soft px-4 py-3 text-sm text-alert">
+            <IconAlert width="18" height="18" className="flex-shrink-0 mt-0.5" />
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 flex items-start gap-3 rounded-md border border-transit/25 bg-transit-soft px-4 py-3 text-sm text-transit">
+            <IconCheckCircle width="18" height="18" className="flex-shrink-0 mt-0.5" />
+            {success}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded-lg border border-black/10 bg-white" />
+            ))}
+          </div>
+        ) : trips.length === 0 ? (
+          <div className="rounded-lg border border-black/10 bg-white p-12 text-center">
+            <p className="text-muted">No trips created yet</p>
+            <button
+              onClick={openCreateModal}
+              className="mt-4 text-sm font-medium text-signal hover:text-signal-dark transition"
+            >
+              Create your first trip
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {trips.map((trip) => (
+              <div
+                key={trip.id}
+                className="rounded-lg border border-black/10 bg-white p-6 hover:border-black/20 transition"
+              >
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      Trip ID
+                    </p>
+                    <p className="mt-2 font-mono text-sm font-medium text-text">
+                      #{trip.id}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      Route
+                    </p>
+                    <p className="mt-2 text-sm text-text">
+                      {trip.source} → {trip.destination}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      Vehicle & Driver
+                    </p>
+                    <p className="mt-2 text-sm text-text">
+                      {getVehicleName(trip.vehicle_id)} / {getDriverName(trip.driver_id)}
+                    </p>
+                  </div>
+                  <div className="flex items-end">
+                    <StatusBadge status={trip.status} />
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <div className="rounded-md bg-paper-soft p-3">
+                    <p className="text-xs text-muted">Cargo</p>
+                    <p className="mt-1 font-semibold text-text">{trip.cargo_weight} kg</p>
+                  </div>
+                  <div className="rounded-md bg-paper-soft p-3">
+                    <p className="text-xs text-muted">Distance</p>
+                    <p className="mt-1 font-semibold text-text">{trip.planned_distance} km</p>
+                  </div>
+                  <div className="rounded-md bg-paper-soft p-3">
+                    <p className="text-xs text-muted">Created</p>
+                    <p className="mt-1 font-semibold text-text text-sm">
+                      {new Date(trip.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="rounded-md bg-paper-soft p-3">
+                    <p className="text-xs text-muted">Updated</p>
+                    <p className="mt-1 font-semibold text-text text-sm">
+                      {new Date(trip.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {trip.status === "Draft" && (
+                    <>
+                      <button
+                        onClick={() => handleDispatchTrip(trip.id)}
+                        className="flex items-center gap-2 rounded-md bg-signal px-4 py-2 text-sm font-medium text-ink hover:bg-signal-dark transition"
+                      >
+                        <IconPlay width="16" height="16" />
+                        Dispatch
+                      </button>
+                      <button
+                        onClick={() => handleCancelTrip(trip.id)}
+                        className="flex items-center gap-2 rounded-md bg-alert px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+                      >
+                        <IconX width="16" height="16" />
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  {trip.status === "Dispatched" && (
+                    <>
+                      <button
+                        onClick={() => openCompleteModal(trip)}
+                        className="flex items-center gap-2 rounded-md bg-transit px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+                      >
+                        <IconCheck width="16" height="16" />
+                        Complete
+                      </button>
+                      <button
+                        onClick={() => handleCancelTrip(trip.id)}
+                        className="flex items-center gap-2 rounded-md bg-alert px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+                      >
+                        <IconX width="16" height="16" />
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  {trip.status === "Completed" && (
+                    <button
+                      onClick={() => handleCancelTrip(trip.id)}
+                      className="flex items-center gap-2 rounded-md border border-black/10 px-4 py-2 text-sm font-medium text-text hover:bg-paper-soft transition"
+                      disabled
+                    >
+                      <IconCheckCircle width="16" height="16" />
+                      Completed
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Create Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create New Trip"
+      >
+        <form onSubmit={handleCreateTrip} className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Source Location *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.source}
+                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                placeholder="e.g., Warehouse A"
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Destination Location *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.destination}
+                onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                placeholder="e.g., Store B"
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Vehicle *
+              </label>
+              <select
+                required
+                value={formData.vehicle_id}
+                onChange={(e) => setFormData({ ...formData, vehicle_id: e.target.value })}
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              >
+                <option value="">Select an available vehicle</option>
+                {getAvailableVehicles().map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.vehicle_name} ({v.registration_number})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Driver *
+              </label>
+              <select
+                required
+                value={formData.driver_id}
+                onChange={(e) => setFormData({ ...formData, driver_id: e.target.value })}
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              >
+                <option value="">Select an available driver</option>
+                {getAvailableDrivers().map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({d.license_category})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Cargo Weight (kg) *
+              </label>
+              <input
+                type="number"
+                required
+                value={formData.cargo_weight}
+                onChange={(e) => setFormData({ ...formData, cargo_weight: e.target.value })}
+                placeholder="e.g., 450"
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Planned Distance (km) *
+              </label>
+              <input
+                type="number"
+                required
+                value={formData.planned_distance}
+                onChange={(e) => setFormData({ ...formData, planned_distance: e.target.value })}
+                placeholder="e.g., 50"
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4">
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="rounded-md border border-black/10 px-4 py-2 text-sm font-medium text-text hover:bg-paper-soft transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-signal px-4 py-2 text-sm font-medium text-ink hover:bg-signal-dark transition"
+            >
+              Create Trip
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Complete Modal */}
+      <Modal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        title="Complete Trip"
+      >
+        <form onSubmit={handleCompleteTrip} className="space-y-5">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Final Odometer (km) *
+              </label>
+              <input
+                type="number"
+                required
+                value={completeData.final_odometer}
+                onChange={(e) =>
+                  setCompleteData({ ...completeData, final_odometer: e.target.value })
+                }
+                placeholder="e.g., 15050"
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text mb-1.5">
+                Fuel Consumed (liters) *
+              </label>
+              <input
+                type="number"
+                required
+                step="0.01"
+                value={completeData.fuel_consumed}
+                onChange={(e) =>
+                  setCompleteData({ ...completeData, fuel_consumed: e.target.value })
+                }
+                placeholder="e.g., 12.5"
+                className="w-full rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4">
+            <button
+              type="button"
+              onClick={() => setShowCompleteModal(false)}
+              className="rounded-md border border-black/10 px-4 py-2 text-sm font-medium text-text hover:bg-paper-soft transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-transit px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+            >
+              Complete Trip
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  const statusMap = {
+    Draft: { bg: "bg-paper-soft", text: "text-muted" },
+    Dispatched: { bg: "bg-signal/10", text: "text-signal" },
+    Completed: { bg: "bg-transit-soft", text: "text-transit" },
+    Cancelled: { bg: "bg-alert-soft", text: "text-alert" },
+  };
+
+  const style = statusMap[status] || statusMap.Draft;
+
+  return (
+    <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${style.bg} ${style.text}`}>
+      {status}
+    </span>
+  );
+}
