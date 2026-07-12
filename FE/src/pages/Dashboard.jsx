@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  IconTruck,
   IconCheckCircle,
   IconAlertCircle,
   IconMap,
   IconSettings,
-  IconLogOut,
   IconChevronRight,
   IconBarChart3,
+  IconTruck,
   IconUser,
 } from "../components/Icons.jsx";
-import { getDashboardKpis, logout } from "../lib/api.js";
-import { clearSession } from "../lib/auth.js";
+import { getDashboardKpis } from "../lib/api.js";
+import Sidebar from "../components/Sidebar.jsx";
 
 export default function Dashboard() {
   const [kpis, setKpis] = useState(null);
@@ -37,39 +36,12 @@ export default function Dashboard() {
     }
   }
 
-  function handleLogout() {
-    logout();
-    clearSession();
-    window.location.href = "/login";
-  }
-
   return (
-    <div className="min-h-screen bg-paper">
-      {/* Header */}
-      <header className="border-b border-black/10 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-4 md:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-signal text-ink">
-                <IconTruck />
-              </span>
-              <span className="font-display text-lg font-semibold">TransitOps</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-sm text-muted hover:text-text transition"
-              >
-                <IconLogOut width="18" height="18" />
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-paper md:pl-64">
+      <Sidebar />
 
       {/* Main */}
-      <main className="mx-auto max-w-7xl px-6 py-8 md:px-8">
+      <main className="mx-auto max-w-7xl px-6 pt-20 pb-8 md:px-8 md:pt-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-semibold text-text">Dashboard</h1>
           <p className="mt-1 text-sm text-muted">Real-time overview of your fleet operations</p>

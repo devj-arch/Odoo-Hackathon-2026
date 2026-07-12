@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   IconPlus,
-  IconChevronLeft,
   IconAlert,
   IconCheckCircle,
   IconCheck,
@@ -16,6 +14,7 @@ import {
 } from "../lib/api.js";
 import { formatDate } from "../lib/format.js";
 import Modal from "../components/Modal.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
 const MAINTENANCE_TYPES = [
   "Oil Change",
@@ -134,17 +133,12 @@ export default function MaintenanceLog() {
   const closedLogs = logs.filter((log) => !log.is_active);
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper md:pl-64">
+      <Sidebar />
+
       {/* Header */}
-      <header className="border-b border-black/10 bg-white">
+      <header className="border-b border-black/10 bg-white pt-14 md:pt-0">
         <div className="mx-auto max-w-7xl px-6 py-4 md:px-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-text transition mb-4"
-          >
-            <IconChevronLeft width="18" height="18" />
-            Back to Dashboard
-          </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-display text-2xl font-semibold text-text">Maintenance Log</h1>
