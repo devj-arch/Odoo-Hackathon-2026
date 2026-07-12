@@ -9,14 +9,7 @@ from app.services import report_service
 from app.utils.enums import Role
 
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"], dependencies=[
-    Depends(
-        require_roles(
-            Role.DISPATCHER.value,
-            Role.FINANCIAL_ANALYST.value,
-        )
-    )
-],)
+router = APIRouter(prefix="/dashboard", tags=["dashboard"],)
 
 
 
