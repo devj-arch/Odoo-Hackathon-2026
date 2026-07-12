@@ -31,6 +31,9 @@ The platform serves four roles:
 | **Safety Officer** | Driver compliance, license validity, safety scores |
 | **Financial Analyst** | Operational expenses, fuel cost, maintenance cost, ROI |
 
+An additional **Admin** role has full-system access and acts as an override for
+all route-level RBAC checks.
+
 ---
 
 ## 2. Core Idea
@@ -54,6 +57,9 @@ To keep this reliable, **all status logic lives in the backend service layer**
 (`services/`). Routes stay thin, services own the rules, and any change that
 touches a vehicle, driver, and trip together happens in a single transaction —
 so the data can never end up half-updated.
+
+RBAC is enforced in the backend dependency layer so permissions cannot be
+bypassed by calling the API directly.
 
 ---
 
@@ -188,6 +194,13 @@ foundation and API conventions.
 Shared conventions keep the modules compatible:
 REST under `/api`, JSON payloads, JWT auth, and errors returned as
 `{ "detail": "message" }`.
+
+Current route-to-role RBAC map:
+- `Admin` → full access to every backend route
+- `Fleet Manager` → vehicles + maintenance, dashboard read
+- `Dispatcher` → trips, vehicle read, driver read, dashboard read
+- `Safety Officer` → drivers, dashboard read
+- `Financial Analyst` → expenses, fuel logs, dashboard/report read
 
 ---
 

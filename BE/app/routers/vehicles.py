@@ -3,10 +3,11 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_roles
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleOut, VehicleUpdate
+from app.utils.enums import Role
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
@@ -14,7 +15,9 @@ router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 @router.get("/", response_model=list[VehicleOut])
 def list_vehicles(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value)
+    ),
 ):
     """List all vehicles."""
     return db.query(Vehicle).all()
@@ -24,7 +27,9 @@ def list_vehicles(
 def get_vehicle(
     vehicle_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles(Role.FLEET_MANAGER.value, Role.DISPATCHER.value)
+    ),
 ):
     """Get a single vehicle by ID."""
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
@@ -37,7 +42,7 @@ def get_vehicle(
 def create_vehicle(
     data: VehicleCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(Role.FLEET_MANAGER.value)),
 ):
     """Register a new vehicle."""
     vehicle = Vehicle(**data.model_dump())
@@ -59,7 +64,7 @@ def update_vehicle(
     vehicle_id: int,
     data: VehicleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(Role.FLEET_MANAGER.value)),
 ):
     """Update an existing vehicle."""
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
@@ -85,7 +90,7 @@ def update_vehicle(
 def delete_vehicle(
     vehicle_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(Role.FLEET_MANAGER.value)),
 ):
     """Delete a vehicle."""
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
