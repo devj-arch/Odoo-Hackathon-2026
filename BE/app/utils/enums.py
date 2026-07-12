@@ -2,6 +2,7 @@ import enum
 
 
 class Role(str, enum.Enum):
+    ADMIN = "Admin"
     FLEET_MANAGER = "Fleet Manager"
     DISPATCHER = "Dispatcher"
     SAFETY_OFFICER = "Safety Officer"

@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_roles
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseOut
+from app.utils.enums import Role
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/expenses", tags=["expenses"])
 @router.get("/", response_model=list[ExpenseOut])
 def list_expenses(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """List all expenses."""
     return db.query(Expense).order_by(Expense.created_at.desc()).all()
@@ -22,7 +23,7 @@ def list_expenses(
 def get_expense(
     expense_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """Get a single expense by ID."""
     expense = db.query(Expense).filter(Expense.id == expense_id).first()
@@ -35,7 +36,7 @@ def get_expense(
 def create_expense(
     data: ExpenseCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """Log an expense."""
     expense = Expense(**data.model_dump())
@@ -49,7 +50,7 @@ def create_expense(
 def delete_expense(
     expense_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """Delete an expense."""
     expense = db.query(Expense).filter(Expense.id == expense_id).first()

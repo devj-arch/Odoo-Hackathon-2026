@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_roles
 from app.models.fuel_log import FuelLog
 from app.schemas.fuel_log import FuelLogCreate, FuelLogOut
+from app.utils.enums import Role
 
 router = APIRouter(prefix="/fuel-logs", tags=["fuel-logs"])
 
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/fuel-logs", tags=["fuel-logs"])
 @router.get("/", response_model=list[FuelLogOut])
 def list_fuel_logs(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """List all fuel logs."""
     return db.query(FuelLog).order_by(FuelLog.created_at.desc()).all()
@@ -22,7 +23,7 @@ def list_fuel_logs(
 def get_fuel_log(
     log_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """Get a single fuel log by ID."""
     log = db.query(FuelLog).filter(FuelLog.id == log_id).first()
@@ -35,7 +36,7 @@ def get_fuel_log(
 def create_fuel_log(
     data: FuelLogCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """Log a fuel purchase."""
     log = FuelLog(**data.model_dump())
@@ -49,7 +50,7 @@ def create_fuel_log(
 def delete_fuel_log(
     log_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.FINANCIAL_ANALYST.value)),
 ):
     """Delete a fuel log."""
     log = db.query(FuelLog).filter(FuelLog.id == log_id).first()

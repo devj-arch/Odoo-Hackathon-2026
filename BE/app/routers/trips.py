@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.exceptions import AppException
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_roles
 from app.models.trip import Trip
 from app.schemas.trip import TripComplete, TripCreate, TripListOut, TripOut
 from app.services import trip_service
+from app.utils.enums import Role
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/trips", tags=["trips"])
 @router.get("/", response_model=list[TripListOut])
 def list_trips(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.DISPATCHER.value)),
 ):
     """List all trips."""
     return db.query(Trip).order_by(Trip.created_at.desc()).all()
@@ -24,7 +25,7 @@ def list_trips(
 def get_trip(
     trip_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.DISPATCHER.value)),
 ):
     """Get a single trip by ID, including nested vehicle/driver."""
     trip = db.query(Trip).filter(Trip.id == trip_id).first()
@@ -37,7 +38,7 @@ def get_trip(
 def create_trip(
     data: TripCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.DISPATCHER.value)),
 ):
     """Create a new trip in Draft status.
 
@@ -55,7 +56,7 @@ def create_trip(
 def dispatch_trip(
     trip_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.DISPATCHER.value)),
 ):
     """Dispatch a Draft trip — vehicle and driver set to On Trip."""
     try:
@@ -70,7 +71,7 @@ def complete_trip(
     trip_id: int,
     data: TripComplete,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.DISPATCHER.value)),
 ):
     """Complete a Dispatched trip — vehicle and driver set back to Available."""
     try:
@@ -84,7 +85,7 @@ def complete_trip(
 def cancel_trip(
     trip_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_roles(Role.DISPATCHER.value)),
 ):
     """Cancel a trip. Restores vehicle/driver if already dispatched."""
     try:

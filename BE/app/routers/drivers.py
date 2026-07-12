@@ -3,10 +3,11 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_roles
 from app.models.driver import Driver
 from app.models.user import User
 from app.schemas.driver import DriverCreate, DriverOut, DriverUpdate
+from app.utils.enums import Role
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 
@@ -14,7 +15,9 @@ router = APIRouter(prefix="/drivers", tags=["drivers"])
 @router.get("/", response_model=list[DriverOut])
 def list_drivers(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles(Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
+    ),
 ):
     """List all drivers."""
     return db.query(Driver).all()
@@ -24,7 +27,9 @@ def list_drivers(
 def get_driver(
     driver_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles(Role.DISPATCHER.value, Role.SAFETY_OFFICER.value)
+    ),
 ):
     """Get a single driver by ID."""
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
@@ -37,7 +42,7 @@ def get_driver(
 def create_driver(
     data: DriverCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(Role.SAFETY_OFFICER.value)),
 ):
     """Register a new driver."""
     driver = Driver(**data.model_dump())
@@ -59,7 +64,7 @@ def update_driver(
     driver_id: int,
     data: DriverUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(Role.SAFETY_OFFICER.value)),
 ):
     """Update an existing driver."""
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
@@ -85,7 +90,7 @@ def update_driver(
 def delete_driver(
     driver_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(Role.SAFETY_OFFICER.value)),
 ):
     """Delete a driver."""
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
