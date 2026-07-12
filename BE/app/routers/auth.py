@@ -13,7 +13,6 @@ from app.schemas.auth import (
     ResetPasswordRequest,
 )
 from app.schemas.user import UserCreate
-from app.services import auth_service
 from app.services.auth_services import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -31,7 +30,7 @@ def signup(data: UserCreate, db: Session = Depends(get_db)):
         )
 
     try:
-        user = auth_service.signup(db, data)
+        user = AuthService.signup(db, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
