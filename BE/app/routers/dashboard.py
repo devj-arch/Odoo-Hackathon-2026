@@ -1,0 +1,49 @@
+"""Dashboard and reporting endpoints — read-only aggregation."""
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.dependencies.auth import get_current_user
+from app.services import report_service
+
+router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+
+
+@router.get("/kpis")
+def get_kpis(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Dashboard KPI cards: vehicle counts, trip counts, utilization."""
+    return report_service.get_dashboard_kpis(db)
+
+
+@router.get("/vehicles/{vehicle_id}/operational-cost")
+def get_vehicle_operational_cost(
+    vehicle_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Total operational cost breakdown for a vehicle."""
+    return report_service.get_operational_cost(db, vehicle_id)
+
+
+@router.get("/vehicles/{vehicle_id}/roi")
+def get_vehicle_roi(
+    vehicle_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """ROI calculation for a vehicle."""
+    return report_service.get_vehicle_roi(db, vehicle_id)
+
+
+@router.get("/vehicles/{vehicle_id}/fuel-efficiency")
+def get_vehicle_fuel_efficiency(
+    vehicle_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Fuel efficiency (km/L) for a vehicle."""
+    return report_service.get_fuel_efficiency(db, vehicle_id)
