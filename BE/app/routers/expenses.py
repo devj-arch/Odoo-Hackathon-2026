@@ -7,7 +7,10 @@ from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseOut
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/expenses", tags=["expenses"])
+
+router = APIRouter(prefix="/expenses", tags=["expenses"], dependencies=[
+    Depends(require_roles(Role.FINANCIAL_ANALYST.value))
+],)
 
 
 @router.get("/", response_model=list[ExpenseOut])

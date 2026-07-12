@@ -7,7 +7,9 @@ from app.models.fuel_log import FuelLog
 from app.schemas.fuel_log import FuelLogCreate, FuelLogOut
 from app.utils.enums import Role
 
-router = APIRouter(prefix="/fuel-logs", tags=["fuel-logs"])
+router = APIRouter(prefix="/fuel-logs", tags=["fuel-logs"], dependencies=[
+    Depends(require_roles(Role.FINANCIAL_ANALYST.value))
+],)
 
 
 @router.get("/", response_model=list[FuelLogOut])
