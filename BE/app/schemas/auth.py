@@ -18,3 +18,16 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserInfo
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str

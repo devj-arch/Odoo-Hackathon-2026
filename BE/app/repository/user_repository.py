@@ -31,3 +31,21 @@ class UserRepository:
             .filter(User.id == user_id)
             .first()
         )
+
+    @staticmethod
+    def get_by_reset_token(db: Session, token: str):
+
+        return (
+            db.query(User)
+            .filter(User.reset_token == token)
+            .first()
+        )
+
+    @staticmethod
+    def save(db: Session, user: User):
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        return user

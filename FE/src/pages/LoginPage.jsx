@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import RouteMap from "../components/RouteMap.jsx";
 import {
   IconMail,
@@ -11,8 +12,9 @@ import {
   IconMap,
   IconShield,
   IconWallet,
-} from "../components/icons.jsx";
+} from "../components/Icons.jsx";
 import { login, ApiError } from "../lib/api.js";
+import { setSession } from "../lib/auth.js";
 
 const ROLES = [
   {
@@ -38,6 +40,7 @@ const ROLES = [
 ];
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
@@ -59,10 +62,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const result = await login({ email, password, role });
-      const storage = remember ? window.localStorage : window.sessionStorage;
-      storage.setItem("transitops_token", result.access_token);
-      storage.setItem("transitops_user", JSON.stringify(result.user));
+      setSession({ token: result.access_token, user: result.user, remember });
       setSignedInAs(result.user);
+
+      setTimeout(() => navigate("/", { replace: true }), 700);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -188,9 +191,9 @@ export default function LoginPage() {
                     <label htmlFor="password" className="block text-sm font-medium text-text">
                       Password
                     </label>
-                    <a href="#forgot-password" className="text-sm text-signal-dark hover:underline">
+                    <Link to="/forgot-password" className="text-sm text-signal-dark hover:underline">
                       Forgot password?
-                    </a>
+                    </Link>
                   </div>
                   <div className="relative">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">

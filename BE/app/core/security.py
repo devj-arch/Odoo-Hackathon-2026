@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -64,3 +65,12 @@ def decode_access_token(token: str):
     )
 
     return payload
+
+
+def generate_reset_token() -> str:
+    """
+    Generate an opaque, unguessable token for password-reset links.
+    Stored on the user row (with an expiry) so it can be looked up and
+    invalidated after a single use.
+    """
+    return secrets.token_urlsafe(32)
